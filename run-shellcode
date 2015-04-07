@@ -1,0 +1,5 @@
+#!/bin/sh
+# compiles shellcode.c test template and runs it
+# usage: ./run-shellcode <filename without extension>
+gcc -o $1 $1.c -m32 -fno-stack-protector -z execstack
+./$1

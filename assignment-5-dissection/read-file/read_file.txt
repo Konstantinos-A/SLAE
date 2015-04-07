@@ -1,0 +1,114 @@
+# Dissection - read-file, commented disassembly
+# Paw Petersen, SLAE-656
+# https://www.pawpetersen.dk/slae-assignment-5b-shellcode-dissection-read_file-linux-x86/
+
+00  EB36              jmp short 0x38  ; jump-call-pop
+02  B805000000        mov eax,0x5     ; eax=0x5 (sys_open)
+07  5B                pop ebx         ; jump-call-pop
+08  31C9              xor ecx,ecx     ; reset ecx
+0A  CD80              int 0x80        ; syscall
+0C  89C3              mov ebx,eax     ; fd=returned fd
+0E  B803000000        mov eax,0x3     ; eax=0x3 (sys_read)
+13  89E7              mov edi,esp     ; ret=pointer
+15  89F9              mov ecx,edi     ; buf=pointer
+17  BA00100000        mov edx,0x1000  ; count=0x1000
+1C  CD80              int 0x80        ; syscall
+1E  89C2              mov edx,eax     ; reset ecx
+20  B804000000        mov eax,0x4     ; eax=0x4 (sys_write)
+25  BB01000000        mov ebx,0x1     ; fd=stdout
+2A  CD80              int 0x80        ; syscall
+2C  B801000000        mov eax,0x1     ; eax=1 (sys_exit)
+31  BB00000000        mov ebx,0x0     ; ebx=0 (return 0)
+36  CD80              int 0x80        ; syscall
+38  E8C5FFFFFF        call dword 0x2  ; jump-call-pop
+3D  2E2F              cs das
+3F  666C              o16 insb
+41  61                popad
+42  67                a16
+43  00                db 0x00
+
+
+>>> struct.unpack("<7s","\x2E\x2F\x66\x6C\x61\x67\x00")
+('./flag\x00',)
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------
+
+
+
+
+
+00  6A43              push byte +0x43
+02  59                pop ecx                             ; ecx=0x43
+03  E8FFFFFFFF        call dword 0x7                      ; push ip (0x08) to stack. call 0x7, that's annoying
+08  C15E304C          rcr dword [esi+0x30],byte 0x4c
+0C  0E                push cs
+0D  07                pop es
+0E  E2FA              loop 0xa
+10  EA34BB01050607    jmp dword 0x706:0x501bb34
+17  53                push ebx
+18  38C3              cmp bl,al
+1A  C6                db 0xc6
+1B  8C84CDB7131112    mov [ebp+ecx*8+0x121113b7],es
+22  139DF29FEEA2      adc ebx,[ebp-0x5d11600e]
+28  1920              sbb [eax],esp
+2A  1B1CD0            sbb ebx,[eax+edx*8]
+2D  9E                sahf
+2E  96                xchg eax,esi
+2F  E299              loop 0xffffffca
+31  262324259D262829  and esp,[es:0x2928269d]
+39  2AE6              sub ah,dh
+3B  AC                lodsb
+3C  95                xchg eax,ebp
+3D  2F                das
+3E  2F                das
+3F  3031              xor [ecx],dh
+41  8933              mov [ebx],esi
+43  3435              xor al,0x35
+45  36FA              ss cli
+47  B8D1FFC4C3        mov eax,0xc3c4ffd1
+4C  C21010            ret 0x1010
+4F  262D232444        es sub eax,0xa4424
+
+
+$ echo $buf | ndisasm -u - -k 0x0,0x7
+00  skipping 0x7 bytes
+07  FFC1              inc ecx                       ; ecx=0x44
+09  5E                pop esi                       ; esi=saved ip (0x08)
+0A  304C0E07          xor [esi+ecx+0x7],cl          ; xor [saved ip + ecx + 0x7],cl = xor [0x0f + ecx],cl
+0E  E2FA              loop 0xa                      ; decryption loop
+10  EA34BB01050607    jmp dword 0x706:0x501bb34
+17  53                push ebx
+18  38C3              cmp bl,al
+1A  C6                db 0xc6
+1B  8C84CDB7131112    mov [ebp+ecx*8+0x121113b7],es
+22  139DF29FEEA2      adc ebx,[ebp-0x5d11600e]
+28  1920              sbb [eax],esp
+2A  1B1CD0            sbb ebx,[eax+edx*8]
+2D  9E                sahf
+2E  96                xchg eax,esi
+2F  E299              loop 0xffffffca
+31  262324259D262829  and esp,[es:0x2928269d]
+39  2AE6              sub ah,dh
+3B  AC                lodsb
+3C  95                xchg eax,ebp
+3D  2F                das
+3E  2F                das
+3F  3031              xor [ecx],dh
+41  8933              mov [ebx],esi
+43  3435              xor al,0x35
+45  36FA              ss cli
+47  B8D1FFC4C3        mov eax,0xc3c4ffd1
+4C  C21010            ret 0x1010
+4F  262D232444        es sub eax,0xa4424

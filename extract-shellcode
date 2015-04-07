@@ -1,0 +1,6 @@
+#!/bin/sh
+# assembles, links and extracts shellcode from binary
+# usage: ./extract-shellcode <filename without extension>
+nasm -f elf ./$1.asm
+ld -o $1 $1.o -melf_i386
+for i in `objdump -D $1 | tr '\t' ' ' | tr ' ' '\n' | egrep '^[0-9a-f]{2}$' ` ; do echo -n "\x$i" ; done

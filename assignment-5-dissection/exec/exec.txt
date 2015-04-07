@@ -1,0 +1,29 @@
+# Dissection - exec, libemu output
+# Paw Petersen, SLAE-656
+# https://www.pawpetersen.dk/slae-assignment-5a-shellcode-dissection-exec-linux-x86/
+
+verbose = 1
+execve
+int execve (const char *dateiname=00416fc4={/bin/sh}, const char * argv[], const char *envp[]);
+cpu error error accessing 0x00000004 not mapped
+
+stepcount 73
+int execve (
+     const char * dateiname = 0x00416fc4 => 
+           = "/bin/sh";
+     const char * argv[] = [
+           = 0x00416fb4 => 
+               = 0x00416fc4 => 
+                   = "/bin/sh";
+           = 0x00416fb8 => 
+               = 0x00416fcc => 
+                   = "-c";
+           = 0x00416fbc => 
+               = 0x00417038 => 
+                   = "/bin/cat ./flag";
+           = 0x00000000 => 
+             none;
+     ];
+     const char * envp[] = 0x00000000 => 
+         none;
+) =  0;
